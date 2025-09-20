@@ -8,6 +8,10 @@ export default function MissesGraph() {
   const [todayOptions, setTodayOptions] = useState({});
   const [partsSeries, setPartsSeries] = useState([]);
   const [partsOptions, setPartsOptions] = useState({});
+  const [radarSeries, setRadarSeries] = useState([]);
+  const [radarOptions, setRadarOptions] = useState({});
+  const [gaugeSeries, setGaugeSeries] = useState([]);
+  const [gaugeOptions, setGaugeOptions] = useState({});
 
   useEffect(() => {
     const fetchMisses = async (code) => {
@@ -29,15 +33,14 @@ export default function MissesGraph() {
       const data143 = await fetchMisses("143");
       const data1432 = await fetchMisses("1432");
 
-      // --- Today chart ---
       const allTimes = [
         ...data143.map((d) => ({ time: d.time, who: "Her" })),
         ...data1432.map((d) => ({ time: d.time, who: "Him" })),
       ].sort((a, b) => new Date(a.time) - new Date(b.time));
 
+      // --- Today (cumulative line chart) ---
       let cumHer = 0;
       let cumHim = 0;
-
       const todayCategories = [];
       const seriesHer = [];
       const seriesHim = [];
@@ -75,7 +78,7 @@ export default function MissesGraph() {
         grid: { borderColor: "#e5e7eb" },
       });
 
-      // --- By Parts chart ---
+      // --- ByParts (bar chart per 6h) ---
       const partLabels = ["0–6h", "6–12h", "12–18h", "18–24h"];
       const partCountsHer = [0, 0, 0, 0];
       const partCountsHim = [0, 0, 0, 0];
@@ -87,7 +90,6 @@ export default function MissesGraph() {
         if (entry.who === "Him") partCountsHim[bucket]++;
       });
 
-      // 🔑 No rolling cumulative here — just per bucket counts
       setPartsSeries([
         { name: "Her", data: partCountsHer },
         { name: "Him", data: partCountsHim },
@@ -103,6 +105,42 @@ export default function MissesGraph() {
         dataLabels: { enabled: true },
         grid: { borderColor: "#e5e7eb" },
       });
+
+      // --- Radar chart ---
+      setRadarSeries([
+        { name: "Her", data: partCountsHer },
+        { name: "Him", data: partCountsHim },
+      ]);
+      setRadarOptions({
+        chart: { type: "radar", toolbar: { show: true } },
+        xaxis: { categories: partLabels },
+        colors: ["#EC4899", "#3B82F6"],
+        stroke: { width: 2 },
+        fill: { opacity: 0.3 },
+      });
+
+      // --- Gauge chart (radialBar) ---
+      const totalHer = data143.length;
+      const totalHim = data1432.length;
+      const total = totalHer + totalHim || 1; // prevent /0
+
+      const herPct = Math.round((totalHer / total) * 100);
+      const himPct = Math.round((totalHim / total) * 100);
+
+      setGaugeSeries([herPct, himPct]);
+      setGaugeOptions({
+        chart: { type: "radialBar" },
+        plotOptions: {
+          radialBar: {
+            dataLabels: {
+              name: { fontSize: "16px" },
+              value: { fontSize: "14px", formatter: (val) => `${val}%` },
+            },
+          },
+        },
+        labels: ["Her", "Him"],
+        colors: ["#EC4899", "#3B82F6"],
+      });
     };
 
     loadData();
@@ -117,35 +155,46 @@ export default function MissesGraph() {
       </h2>
 
       {/* Tabs */}
-      <div className="flex justify-center gap-4 mb-4">
-        <button
-          onClick={() => setActiveTab("today")}
-          className={`px-4 py-1 rounded-lg font-medium ${
-            activeTab === "today"
-              ? "bg-blue-500 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          Today
-        </button>
-        <button
-          onClick={() => setActiveTab("parts")}
-          className={`px-4 py-1 rounded-lg font-medium ${
-            activeTab === "parts"
-              ? "bg-pink-500 text-white"
-              : "bg-gray-200 text-gray-700"
-          }`}
-        >
-          ByParts
-        </button>
+      <div className="flex justify-center gap-2 mb-4 flex-wrap">
+        {["today", "parts", "radar", "gauge"].map((tab) => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-3 py-1 rounded-lg font-medium ${
+              activeTab === tab
+                ? tab === "today"
+                  ? "bg-blue-500 text-white"
+                  : tab === "parts"
+                  ? "bg-pink-500 text-white"
+                  : tab === "radar"
+                  ? "bg-purple-500 text-white"
+                  : "bg-green-500 text-white"
+                : "bg-gray-200 text-gray-700"
+            }`}
+          >
+            {tab === "today"
+              ? "Today"
+              : tab === "parts"
+              ? "ByParts"
+              : tab === "radar"
+              ? "Radar"
+              : "Gauge"}
+          </button>
+        ))}
       </div>
 
-      {/* Chart */}
+      {/* Charts */}
       {activeTab === "today" && todaySeries.length > 0 && (
         <Chart options={todayOptions} series={todaySeries} type="line" height={320} />
       )}
       {activeTab === "parts" && partsSeries.length > 0 && (
         <Chart options={partsOptions} series={partsSeries} type="bar" height={320} />
+      )}
+      {activeTab === "radar" && radarSeries.length > 0 && (
+        <Chart options={radarOptions} series={radarSeries} type="radar" height={320} />
+      )}
+      {activeTab === "gauge" && gaugeSeries.length > 0 && (
+        <Chart options={gaugeOptions} series={gaugeSeries} type="radialBar" height={320} />
       )}
     </div>
   );

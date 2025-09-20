@@ -73,10 +73,10 @@ export default function TellThemButton() {
       <Toaster position="bottom-right" reverseOrder={false} />
 
     
-
+{/* 
       <div className="text-xl font-semibold mb-1 text-center text-blue-800">
       Missing {storedCode=="143"?"him?":"her?"} 🥺
-      </div>
+      </div> */}
 
       <button
         className="w-full max-w-xs p-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"

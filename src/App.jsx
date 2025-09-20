@@ -14,10 +14,11 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      
       <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
+      {hasCode && <MissesGraph />}
         {hasCode ? <TellThemButton /> : <CodeForm onSave={() => setHasCode(true)} />}
       </div>
-
       <Footer />
     </div>
   );

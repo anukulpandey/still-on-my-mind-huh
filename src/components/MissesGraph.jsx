@@ -26,30 +26,32 @@ export default function MissesGraph() {
       const data143 = await fetchMisses("143");
       const data1432 = await fetchMisses("1432");
 
-      // Compute cumulative counts
-      const maxLength = Math.max(data143.length, data1432.length);
-      const seriesHer = [];
-      const seriesHim = [];
-      const categories = [];
+      // Merge + sort times
+      const allTimes = [
+        ...data143.map((d) => ({ time: d.time, who: "Her" })),
+        ...data1432.map((d) => ({ time: d.time, who: "Him" })),
+      ].sort((a, b) => new Date(a.time) - new Date(b.time));
 
       let cumHer = 0;
       let cumHim = 0;
 
-      for (let i = 0; i < maxLength; i++) {
-        if (i < data143.length) cumHer += 1;
-        if (i < data1432.length) cumHim += 1;
+      const seriesHer = [];
+      const seriesHim = [];
+      const categories = [];
+
+      allTimes.forEach((entry) => {
+        if (entry.who === "Her") cumHer++;
+        if (entry.who === "Him") cumHim++;
 
         categories.push(
-          (data143[i]?.time || data1432[i]?.time) &&
-            new Date(data143[i]?.time || data1432[i]?.time).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })
+          new Date(entry.time).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
         );
-
         seriesHer.push(cumHer);
         seriesHim.push(cumHim);
-      }
+      });
 
       setChartSeries([
         { name: "Her", data: seriesHer },
@@ -66,6 +68,11 @@ export default function MissesGraph() {
         xaxis: {
           categories,
           title: { text: "Time" },
+          labels: {
+            rotate: -45,
+            style: { fontSize: "11px" },
+          },
+          tickAmount: Math.min(categories.length, 8), // reduce clutter
         },
         yaxis: {
           title: { text: "Cumulative Misses" },
@@ -74,7 +81,7 @@ export default function MissesGraph() {
         colors: ["#EC4899", "#3B82F6"], // pink for Her, blue for Him
         dataLabels: { enabled: false },
         tooltip: { enabled: true },
-        grid: { borderColor: "#e5e7eb" }, // Tailwind gray-200
+        grid: { borderColor: "#e5e7eb" },
       });
     };
 
@@ -85,8 +92,11 @@ export default function MissesGraph() {
 
   return (
     <div className="w-full max-w-lg mx-auto mt-8 p-4 bg-white rounded-xl shadow-lg">
-      <h2 className="text-center font-semibold text-lg mb-4">{import.meta.env.VITE_CHART_TITLE} Syndrome</h2>
-      <Chart options={chartOptions} series={chartSeries} type="line" height={300} />
+      <h2 className="text-center font-semibold text-lg mb-4">
+        <span className="text-blue-500">Still On My Mind, </span>
+        <span className="text-pink-500">Huh?</span>
+      </h2>
+      <Chart options={chartOptions} series={chartSeries} type="line" height={320} />
     </div>
   );
 }

@@ -167,8 +167,8 @@ export default function MissesGraph() {
                   : tab === "parts"
                   ? "bg-pink-500 text-white"
                   : tab === "radar"
-                  ? "bg-purple-500 text-white"
-                  : "bg-green-500 text-white"
+                  ? "bg-blue-500 text-white"
+                  : "bg-pink-500 text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >

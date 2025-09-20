@@ -3,6 +3,7 @@ import CodeForm from "./components/CodeForm";
 import TellThemButton from "./components/TellThemButton";
 import Footer from "./components/Footer";
 import MissesGraph from "./components/MissesGraph";
+import Header from "./components/Header";
 
 function App() {
   const [hasCode, setHasCode] = useState(false);
@@ -14,7 +15,7 @@ function App() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      
+      <Header />
       <div className="flex-1 flex flex-col items-center justify-center p-4 gap-6">
       {hasCode && <MissesGraph />}
         {hasCode ? <TellThemButton /> : <CodeForm onSave={() => setHasCode(true)} />}

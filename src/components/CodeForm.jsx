@@ -4,12 +4,21 @@ export default function CodeForm({ onSave }) {
   const [name, setName] = useState(localStorage.getItem("name") || "");
   const [code, setCode] = useState(localStorage.getItem("code") || "");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
 
   const handleSave = () => {
     if (!name || !code) return alert("Enter both name and code");
+
+    if (code !== "143" && code !== "1432") {
+      setError("Incorrect code");
+      setMessage("");
+      return;
+    }
+
     localStorage.setItem("name", name);
     localStorage.setItem("code", code);
     setMessage("Saved! You are now on Mind.");
+    setError("");
     onSave();
   };
 
@@ -34,6 +43,7 @@ export default function CodeForm({ onSave }) {
         Save
       </button>
       {message && <div className="mt-2 text-green-600">{message}</div>}
+      {error && <div className="mt-2 text-red-600">{error}</div>}
     </div>
   );
 }

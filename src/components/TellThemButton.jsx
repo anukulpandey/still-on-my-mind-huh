@@ -10,11 +10,16 @@ export default function TellThemButton() {
 
   const fetchLastMiss = async () => {
     if (!storedCode) return;
+    let codeToFetch = "143";
+
+    if(storedCode=="143"){
+        codeToFetch="1432";
+    }
 
     const { data, error } = await supabase
       .from("misses")
       .select("*")
-      .eq("code", storedCode)
+      .eq("code",codeToFetch )
       .order("time", { ascending: false })
       .limit(1)
       .single();

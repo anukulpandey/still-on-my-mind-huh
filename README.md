@@ -65,5 +65,6 @@ This will generate a `dist` folder , host it and enjoy
 Default credentials 
 
 Code `143` for Female
+
 Code `1432` for Male
    

@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function TellThemButton() {
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState("");
   const [lastMiss, setLastMiss] = useState(null);
 
   const storedCode = localStorage.getItem("code");
@@ -11,21 +11,19 @@ export default function TellThemButton() {
   const fetchLastMiss = async () => {
     if (!storedCode) return;
     let codeToFetch = "143";
-
-    if(storedCode=="143"){
-        codeToFetch="1432";
-    }
+    if (storedCode === "143") codeToFetch = "1432";
 
     const { data, error } = await supabase
       .from("misses")
       .select("*")
-      .eq("code",codeToFetch )
+      .eq("code", codeToFetch)
       .order("time", { ascending: false })
       .limit(1)
       .single();
 
     if (error) {
       console.error("Error fetching last miss:", error);
+      setLastMiss(`She ain't missing you :(`);
     } else if (data) {
       const timeAgo = getTimeAgo(new Date(data.time));
       setLastMiss(`${data.name} missed you ${timeAgo}`);
@@ -38,26 +36,23 @@ export default function TellThemButton() {
 
   const handleTellThem = async () => {
     setLoading(true);
-    setMessage("");
-
     const storedName = localStorage.getItem("name");
 
     const { error } = await supabase
       .from("misses")
-      .insert([{ code: storedCode, name: storedName ,  time: new Date().toISOString()}]);
+      .insert([{ code: storedCode, name: storedName, time: new Date().toISOString() }]);
 
     if (error) {
-      setMessage("Error sending message");
       console.error(error);
+      toast.error("Error sending message");
     } else {
-      setMessage("Message sent!");
-      fetchLastMiss(); // refresh the last miss after sending
+      toast.success("Message sent!");
+      fetchLastMiss();
     }
 
     setLoading(false);
   };
 
-  // Helper to format time ago
   const getTimeAgo = (past) => {
     const now = new Date();
     const diffMs = now - past;
@@ -74,23 +69,26 @@ export default function TellThemButton() {
 
   return (
     <div className="flex flex-col gap-3 items-center justify-center px-4 font-sans">
-      <div className="text-xl font-semibold mb-1 text-center text-blue-800">
-        Missing me huh?
-      </div>
+      {/* Toast at bottom-right */}
+      <Toaster position="bottom-right" reverseOrder={false} />
 
-      {lastMiss && (
-        <div className="text-center font-semibold text-red-700">{lastMiss}</div>
-      )}
+    
+
+      <div className="text-xl font-semibold mb-1 text-center text-blue-800">
+      Missing {storedCode=="143"?"him?":"her?"} 🥺
+      </div>
 
       <button
         className="w-full max-w-xs p-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
         onClick={handleTellThem}
         disabled={loading}
       >
-        {loading ? "Sending…" : "Tell Them You Are on Mind"}
+        
+        {loading ? "Sending…" : `Tell ${storedCode=="143"?"him, He":"her, She"} is on your mind! 😭`}
       </button>
-
-      {message && <div className="text-green-600">{message}</div>}
+      {lastMiss && (
+        <div className="text-center font-semibold text-red-700">{lastMiss}</div>
+      )}
     </div>
   );
 }

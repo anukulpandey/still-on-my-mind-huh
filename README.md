@@ -5,20 +5,20 @@ A simple PWA for your boo to let them know you think about them, with lots of da
 What data visualisation tools huh? am I lying?
 Probably not...
 
-<img width="676" height="381.5" alt="Screenshot 2025-09-20 at 11 36 26 PM" src="https://github.com/user-attachments/assets/eb6288cb-33a7-454c-a664-b89f90ce9560" />
+<img width="1352" height="763" alt="Screenshot 2025-09-20 at 11 36 26 PM" src="https://github.com/user-attachments/assets/eb6288cb-33a7-454c-a664-b89f90ce9560" />
 
 Oh.
 Bargraphs too?
 
-<img width="676" height="381.5" alt="Screenshot 2025-09-20 at 11 36 42 PM" src="https://github.com/user-attachments/assets/c6f3e227-0bbe-4d15-99f9-0947a42a3247" />
+<img width="1352" height="763" alt="Screenshot 2025-09-20 at 11 36 42 PM" src="https://github.com/user-attachments/assets/c6f3e227-0bbe-4d15-99f9-0947a42a3247" />
 
 Radars as well?
 
-<img width="676" height="381.5" alt="Screenshot 2025-09-20 at 11 36 58 PM" src="https://github.com/user-attachments/assets/aa7ed900-45d7-48c5-b52c-83f0d8417c4c" />
+<img width="1352" height="763" alt="Screenshot 2025-09-20 at 11 36 58 PM" src="https://github.com/user-attachments/assets/aa7ed900-45d7-48c5-b52c-83f0d8417c4c" />
 
 Gauge too uwu
 
-<img width="676" height="381.5" alt="Screenshot 2025-09-20 at 11 37 12 PM" src="https://github.com/user-attachments/assets/899ff108-8fbe-44b3-8efd-2ba0f0bdcda0" />
+<img width="1352" height="763" alt="Screenshot 2025-09-20 at 11 37 12 PM" src="https://github.com/user-attachments/assets/899ff108-8fbe-44b3-8efd-2ba0f0bdcda0" />
 
 Just click on the Button and Boo will be notified.
 

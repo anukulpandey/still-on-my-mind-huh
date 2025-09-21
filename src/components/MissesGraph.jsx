@@ -23,14 +23,17 @@ export default function MissesGraph() {
   const [heatmapSeries, setHeatmapSeries] = useState([]);
   const [heatmapOptions, setHeatmapOptions] = useState({});
 
+  const [overallSeries, setOverallSeries] = useState([]);
+  const [overallOptions, setOverallOptions] = useState({});
+
   useEffect(() => {
     const fetchMisses = async (code) => {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
-    
+
       const endOfDay = new Date();
       endOfDay.setHours(23, 59, 59, 999);
-    
+
       const { data, error } = await supabase
         .from("misses")
         .select("*")
@@ -38,15 +41,30 @@ export default function MissesGraph() {
         .gte("time", startOfDay.toISOString())
         .lte("time", endOfDay.toISOString())
         .order("time", { ascending: true });
-    
+
       if (error) {
         console.error(`Error fetching misses for code ${code}:`, error);
         return [];
       }
       return data;
-    };    
+    };
+
+    const fetchAllMisses = async (code) => {
+      const { data, error } = await supabase
+        .from("misses")
+        .select("*")
+        .eq("code", code)
+        .order("time", { ascending: true });
+
+      if (error) {
+        console.error(`Error fetching all misses for code ${code}:`, error);
+        return [];
+      }
+      return data;
+    };
 
     const loadData = async () => {
+      // --- Today's Data ---
       const data143 = await fetchMisses("143");
       const data1432 = await fetchMisses("1432");
 
@@ -55,7 +73,6 @@ export default function MissesGraph() {
         ...data1432.map((d) => ({ time: d.time, who: "Him" })),
       ].sort((a, b) => new Date(a.time) - new Date(b.time));
 
-      // --- Today (cumulative line chart) ---
       let cumHer = 0;
       let cumHim = 0;
       const todayCategories = [];
@@ -95,7 +112,7 @@ export default function MissesGraph() {
         grid: { borderColor: "#e5e7eb" },
       });
 
-      // --- ByParts (bar chart per 6h) ---
+      // --- ByParts Chart ---
       const partLabels = ["0–6h", "6–12h", "12–18h", "18–24h"];
       const partCountsHer = [0, 0, 0, 0];
       const partCountsHim = [0, 0, 0, 0];
@@ -121,7 +138,7 @@ export default function MissesGraph() {
         grid: { borderColor: "#e5e7eb" },
       });
 
-      // --- UwU (area chart per 6h) ---
+      // --- UwU Area Chart ---
       setUwuSeries([
         { name: "Her", data: partCountsHer },
         { name: "Him", data: partCountsHim },
@@ -137,7 +154,7 @@ export default function MissesGraph() {
         grid: { borderColor: "#e5e7eb" },
       });
 
-      // --- Radar chart ---
+      // --- Radar Chart ---
       setRadarSeries([
         { name: "Her", data: partCountsHer },
         { name: "Him", data: partCountsHim },
@@ -150,7 +167,7 @@ export default function MissesGraph() {
         fill: { opacity: 0.3 },
       });
 
-      // --- Gauge chart (radialBar) ---
+      // --- Gauge Chart ---
       const totalHer = data143.length;
       const totalHim = data1432.length;
       const total = totalHer + totalHim || 1;
@@ -173,7 +190,7 @@ export default function MissesGraph() {
         colors: ["#EC4899", "#3B82F6"],
       });
 
-      // --- Heatmap chart (misses per hour) ---
+      // --- Heatmap Chart ---
       const hours = Array.from({ length: 24 }, (_, i) => i);
       const herHeat = hours.map((h) => ({
         x: `${h}:00`,
@@ -190,13 +207,54 @@ export default function MissesGraph() {
       ]);
       setHeatmapOptions({
         chart: { type: "heatmap", toolbar: { show: true } },
-        plotOptions: {
-          heatmap: { shadeIntensity: 0.5, radius: 4, useFillColorAsStroke: true },
-        },
+        plotOptions: { heatmap: { shadeIntensity: 0.5, radius: 4, useFillColorAsStroke: true } },
         dataLabels: { enabled: false },
         colors: ["#EC4899", "#3B82F6"],
         xaxis: { title: { text: "Hour of Day" } },
         yaxis: { title: { text: "Misses Count" } },
+      });
+
+      // --- Overall Chart (date-wise daily totals only) ---
+      const data143All = await fetchAllMisses("143");
+      const data1432All = await fetchAllMisses("1432");
+
+      const dateMapHer = {};
+      data143All.forEach(d => {
+        const date = new Date(d.time).toLocaleDateString();
+        dateMapHer[date] = (dateMapHer[date] || 0) + 1;
+      });
+
+      const dateMapHim = {};
+      data1432All.forEach(d => {
+        const date = new Date(d.time).toLocaleDateString();
+        dateMapHim[date] = (dateMapHim[date] || 0) + 1;
+      });
+
+      const allDates = Array.from(
+        new Set([...Object.keys(dateMapHer), ...Object.keys(dateMapHim)])
+      ).sort((a, b) => new Date(a) - new Date(b));
+
+      const seriesHerTotal = [];
+      const seriesHimTotal = [];
+
+      allDates.forEach(date => {
+        seriesHerTotal.push(dateMapHer[date] || 0); // only that day's total
+        seriesHimTotal.push(dateMapHim[date] || 0); // only that day's total
+      });
+
+      setOverallSeries([
+        { name: "Her", data: seriesHerTotal },
+        { name: "Him", data: seriesHimTotal },
+      ]);
+
+      setOverallOptions({
+        chart: { id: "overall", type: "line", zoom: { enabled: false }, toolbar: { show: true } },
+        xaxis: { categories: allDates, title: { text: "Date" }, labels: { rotate: -45 } },
+        yaxis: { title: { text: "Daily Misses" } },
+        stroke: { curve: "smooth", width: 3 },
+        colors: ["#EC4899", "#3B82F6"],
+        dataLabels: { enabled: false },
+        grid: { borderColor: "#e5e7eb" },
       });
     };
 
@@ -213,36 +271,17 @@ export default function MissesGraph() {
 
       {/* Tabs */}
       <div className="flex justify-center gap-2 mb-4 flex-wrap">
-        {["today", "parts", "uwu", "radar", "gauge", "heatmap"].map((tab) => (
+        {["today", "parts", "uwu", "radar", "gauge", "heatmap", "overall"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1 rounded-lg font-medium ${activeTab === tab
-                ? tab === "today"
-                  ? "bg-blue-500 text-white"
-                  : tab === "parts"
-                  ? "bg-pink-500 text-white"
-                  : tab === "uwu"
-                  ? "bg-blue-500 text-white"
-                  : tab === "radar"
-                  ? "bg-pink-500 text-white"
-                  : tab === "gauge"
-                  ? "bg-blue-500 text-white"
-                  : "bg-pink-500 text-white"
+            className={`px-3 py-1 rounded-lg font-medium ${
+              activeTab === tab
+                ? "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-700"
-              }`}
+            }`}
           >
-            {tab === "today"
-              ? "Today"
-              : tab === "parts"
-              ? "ByParts"
-              : tab === "uwu"
-              ? "UwU"
-              : tab === "radar"
-              ? "Radar"
-              : tab === "gauge"
-              ? "Gauge"
-              : "Heatmap"}
+            {tab === "overall" ? "Overall" : tab.charAt(0).toUpperCase() + tab.slice(1)}
           </button>
         ))}
       </div>
@@ -265,6 +304,9 @@ export default function MissesGraph() {
       )}
       {activeTab === "heatmap" && heatmapSeries.length > 0 && (
         <Chart options={heatmapOptions} series={heatmapSeries} type="heatmap" height={350} />
+      )}
+      {activeTab === "overall" && overallSeries.length > 0 && (
+        <Chart options={overallOptions} series={overallSeries} type="line" height={320} />
       )}
     </div>
   );

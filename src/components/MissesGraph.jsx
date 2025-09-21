@@ -25,19 +25,26 @@ export default function MissesGraph() {
 
   useEffect(() => {
     const fetchMisses = async (code) => {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+    
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+    
       const { data, error } = await supabase
         .from("misses")
         .select("*")
         .eq("code", code)
-        .order("time", { ascending: true })
-        .limit(25);
-
+        .gte("time", startOfDay.toISOString())
+        .lte("time", endOfDay.toISOString())
+        .order("time", { ascending: true });
+    
       if (error) {
         console.error(`Error fetching misses for code ${code}:`, error);
         return [];
       }
       return data;
-    };
+    };    
 
     const loadData = async () => {
       const data143 = await fetchMisses("143");

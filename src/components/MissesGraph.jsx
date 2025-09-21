@@ -4,16 +4,24 @@ import { supabase } from "../supabaseClient";
 
 export default function MissesGraph() {
   const [activeTab, setActiveTab] = useState("today");
+
   const [todaySeries, setTodaySeries] = useState([]);
   const [todayOptions, setTodayOptions] = useState({});
+
   const [partsSeries, setPartsSeries] = useState([]);
   const [partsOptions, setPartsOptions] = useState({});
+
   const [uwuSeries, setUwuSeries] = useState([]);
   const [uwuOptions, setUwuOptions] = useState({});
+
   const [radarSeries, setRadarSeries] = useState([]);
   const [radarOptions, setRadarOptions] = useState({});
+
   const [gaugeSeries, setGaugeSeries] = useState([]);
   const [gaugeOptions, setGaugeOptions] = useState({});
+
+  const [heatmapSeries, setHeatmapSeries] = useState([]);
+  const [heatmapOptions, setHeatmapOptions] = useState({});
 
   useEffect(() => {
     const fetchMisses = async (code) => {
@@ -157,6 +165,32 @@ export default function MissesGraph() {
         labels: ["Her", "Him"],
         colors: ["#EC4899", "#3B82F6"],
       });
+
+      // --- Heatmap chart (misses per hour) ---
+      const hours = Array.from({ length: 24 }, (_, i) => i);
+      const herHeat = hours.map((h) => ({
+        x: `${h}:00`,
+        y: data143.filter((d) => new Date(d.time).getHours() === h).length,
+      }));
+      const himHeat = hours.map((h) => ({
+        x: `${h}:00`,
+        y: data1432.filter((d) => new Date(d.time).getHours() === h).length,
+      }));
+
+      setHeatmapSeries([
+        { name: "Her", data: herHeat },
+        { name: "Him", data: himHeat },
+      ]);
+      setHeatmapOptions({
+        chart: { type: "heatmap", toolbar: { show: true } },
+        plotOptions: {
+          heatmap: { shadeIntensity: 0.5, radius: 4, useFillColorAsStroke: true },
+        },
+        dataLabels: { enabled: false },
+        colors: ["#EC4899", "#3B82F6"],
+        xaxis: { title: { text: "Hour of Day" } },
+        yaxis: { title: { text: "Misses Count" } },
+      });
     };
 
     loadData();
@@ -172,12 +206,11 @@ export default function MissesGraph() {
 
       {/* Tabs */}
       <div className="flex justify-center gap-2 mb-4 flex-wrap">
-        {["today", "parts", "uwu", "radar", "gauge"].map((tab) => (
+        {["today", "parts", "uwu", "radar", "gauge", "heatmap"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1 rounded-lg font-medium ${
-              activeTab === tab
+            className={`px-3 py-1 rounded-lg font-medium ${activeTab === tab
                 ? tab === "today"
                   ? "bg-blue-500 text-white"
                   : tab === "parts"
@@ -186,9 +219,11 @@ export default function MissesGraph() {
                   ? "bg-blue-500 text-white"
                   : tab === "radar"
                   ? "bg-pink-500 text-white"
-                  : "bg-blue-500 text-white"
+                  : tab === "gauge"
+                  ? "bg-blue-500 text-white"
+                  : "bg-pink-500 text-white"
                 : "bg-gray-200 text-gray-700"
-            }`}
+              }`}
           >
             {tab === "today"
               ? "Today"
@@ -198,7 +233,9 @@ export default function MissesGraph() {
               ? "UwU"
               : tab === "radar"
               ? "Radar"
-              : "Gauge"}
+              : tab === "gauge"
+              ? "Gauge"
+              : "Heatmap"}
           </button>
         ))}
       </div>
@@ -218,6 +255,9 @@ export default function MissesGraph() {
       )}
       {activeTab === "gauge" && gaugeSeries.length > 0 && (
         <Chart options={gaugeOptions} series={gaugeSeries} type="radialBar" height={320} />
+      )}
+      {activeTab === "heatmap" && heatmapSeries.length > 0 && (
+        <Chart options={heatmapOptions} series={heatmapSeries} type="heatmap" height={350} />
       )}
     </div>
   );

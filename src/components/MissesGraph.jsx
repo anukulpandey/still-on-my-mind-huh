@@ -8,6 +8,8 @@ export default function MissesGraph() {
   const [todayOptions, setTodayOptions] = useState({});
   const [partsSeries, setPartsSeries] = useState([]);
   const [partsOptions, setPartsOptions] = useState({});
+  const [uwuSeries, setUwuSeries] = useState([]);
+  const [uwuOptions, setUwuOptions] = useState({});
   const [radarSeries, setRadarSeries] = useState([]);
   const [radarOptions, setRadarOptions] = useState({});
   const [gaugeSeries, setGaugeSeries] = useState([]);
@@ -99,10 +101,24 @@ export default function MissesGraph() {
         xaxis: { categories: partLabels, title: { text: "Day Parts" } },
         yaxis: { title: { text: "Misses in Part" } },
         colors: ["#EC4899", "#3B82F6"],
-        plotOptions: {
-          bar: { horizontal: false, columnWidth: "40%", borderRadius: 6 },
-        },
+        plotOptions: { bar: { horizontal: false, columnWidth: "40%", borderRadius: 6 } },
         dataLabels: { enabled: true },
+        grid: { borderColor: "#e5e7eb" },
+      });
+
+      // --- UwU (area chart per 6h) ---
+      setUwuSeries([
+        { name: "Her", data: partCountsHer },
+        { name: "Him", data: partCountsHim },
+      ]);
+      setUwuOptions({
+        chart: { id: "uwu", type: "area", toolbar: { show: true } },
+        xaxis: { categories: partLabels, title: { text: "Day Parts" } },
+        yaxis: { title: { text: "Misses in Part" } },
+        colors: ["#EC4899", "#3B82F6"],
+        stroke: { curve: "smooth", width: 2 },
+        dataLabels: { enabled: false },
+        fill: { type: "gradient", gradient: { opacityFrom: 0.5, opacityTo: 0.1 } },
         grid: { borderColor: "#e5e7eb" },
       });
 
@@ -122,7 +138,7 @@ export default function MissesGraph() {
       // --- Gauge chart (radialBar) ---
       const totalHer = data143.length;
       const totalHim = data1432.length;
-      const total = totalHer + totalHim || 1; // prevent /0
+      const total = totalHer + totalHim || 1;
 
       const herPct = Math.round((totalHer / total) * 100);
       const himPct = Math.round((totalHim / total) * 100);
@@ -156,7 +172,7 @@ export default function MissesGraph() {
 
       {/* Tabs */}
       <div className="flex justify-center gap-2 mb-4 flex-wrap">
-        {["today", "parts", "radar", "gauge"].map((tab) => (
+        {["today", "parts", "uwu", "radar", "gauge"].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -166,9 +182,11 @@ export default function MissesGraph() {
                   ? "bg-blue-500 text-white"
                   : tab === "parts"
                   ? "bg-pink-500 text-white"
-                  : tab === "radar"
+                  : tab === "uwu"
                   ? "bg-blue-500 text-white"
-                  : "bg-pink-500 text-white"
+                  : tab === "radar"
+                  ? "bg-pink-500 text-white"
+                  : "bg-blue-500 text-white"
                 : "bg-gray-200 text-gray-700"
             }`}
           >
@@ -176,6 +194,8 @@ export default function MissesGraph() {
               ? "Today"
               : tab === "parts"
               ? "ByParts"
+              : tab === "uwu"
+              ? "UwU"
               : tab === "radar"
               ? "Radar"
               : "Gauge"}
@@ -189,6 +209,9 @@ export default function MissesGraph() {
       )}
       {activeTab === "parts" && partsSeries.length > 0 && (
         <Chart options={partsOptions} series={partsSeries} type="bar" height={320} />
+      )}
+      {activeTab === "uwu" && uwuSeries.length > 0 && (
+        <Chart options={uwuOptions} series={uwuSeries} type="area" height={320} />
       )}
       {activeTab === "radar" && radarSeries.length > 0 && (
         <Chart options={radarOptions} series={radarSeries} type="radar" height={320} />

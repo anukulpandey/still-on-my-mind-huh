@@ -166,8 +166,8 @@ export default function MissesGraph() {
     <div className="w-full max-w-lg mx-auto mt-8 p-4 bg-white rounded-xl shadow-lg">
       {/* Header */}
       <h2 className="text-center font-semibold text-lg mb-2">
-        <span className="text-blue-500">Still On My Mind, </span>
-        <span className="text-pink-500">Huh?</span>
+        <span className="text-blue-500">{import.meta.env.VITE_CHART_TITLE}</span>
+        <span className="text-pink-500"> Syndrome</span>
       </h2>
 
       {/* Tabs */}

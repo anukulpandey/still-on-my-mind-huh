@@ -1,36 +1,35 @@
 import { useEffect, useState } from "react";
 import Chart from "react-apexcharts";
 import { supabase } from "../supabaseClient";
+import { useDarkMode } from "../hooks/useDarkMode";
 
 export default function MissesGraph() {
   const [activeTab, setActiveTab] = useState("today");
+  const { isDarkMode } = useDarkMode();
 
   const [todaySeries, setTodaySeries] = useState([]);
   const [todayOptions, setTodayOptions] = useState({});
-
   const [partsSeries, setPartsSeries] = useState([]);
   const [partsOptions, setPartsOptions] = useState({});
-
   const [uwuSeries, setUwuSeries] = useState([]);
   const [uwuOptions, setUwuOptions] = useState({});
-
   const [radarSeries, setRadarSeries] = useState([]);
   const [radarOptions, setRadarOptions] = useState({});
-
   const [gaugeSeries, setGaugeSeries] = useState([]);
   const [gaugeOptions, setGaugeOptions] = useState({});
-
   const [heatmapSeries, setHeatmapSeries] = useState([]);
   const [heatmapOptions, setHeatmapOptions] = useState({});
-
   const [overallSeries, setOverallSeries] = useState([]);
   const [overallOptions, setOverallOptions] = useState({});
 
   useEffect(() => {
+    const accentColors = isDarkMode ? ["#EF4444", "#FFFFFF"] : ["#EC4899", "#3B82F6"];
+    const gridColor = isDarkMode ? "#444" : "#e5e7eb";
+    const textColor = isDarkMode ? "#FFF" : "#000";
+
     const fetchMisses = async (code) => {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
-
       const endOfDay = new Date();
       endOfDay.setHours(23, 59, 59, 999);
 
@@ -64,7 +63,7 @@ export default function MissesGraph() {
     };
 
     const loadData = async () => {
-      // --- Today's Data ---
+      // --- Today’s Chart ---
       const data143 = await fetchMisses("143");
       const data1432 = await fetchMisses("1432");
 
@@ -73,8 +72,8 @@ export default function MissesGraph() {
         ...data1432.map((d) => ({ time: d.time, who: "Him" })),
       ].sort((a, b) => new Date(a.time) - new Date(b.time));
 
-      let cumHer = 0;
-      let cumHim = 0;
+      let cumHer = 0,
+        cumHim = 0;
       const todayCategories = [];
       const seriesHer = [];
       const seriesHim = [];
@@ -82,12 +81,8 @@ export default function MissesGraph() {
       allTimes.forEach((entry) => {
         if (entry.who === "Her") cumHer++;
         if (entry.who === "Him") cumHim++;
-
         todayCategories.push(
-          new Date(entry.time).toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          })
+          new Date(entry.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
         );
         seriesHer.push(cumHer);
         seriesHim.push(cumHim);
@@ -98,25 +93,19 @@ export default function MissesGraph() {
         { name: "Him", data: seriesHim },
       ]);
       setTodayOptions({
-        chart: { id: "today", type: "line", zoom: { enabled: false }, toolbar: { show: true } },
-        xaxis: {
-          categories: todayCategories,
-          title: { text: "Time" },
-          labels: { rotate: -45, style: { fontSize: "11px" } },
-          tickAmount: Math.min(todayCategories.length, 8),
-        },
-        yaxis: { title: { text: "Cumulative Misses" } },
+        chart: { type: "line", zoom: { enabled: false }, toolbar: { show: true } },
+        xaxis: { categories: todayCategories, labels: { style: { colors: textColor } } },
+        yaxis: { labels: { style: { colors: textColor } } },
         stroke: { curve: "smooth", width: 3 },
-        colors: ["#EC4899", "#3B82F6"],
-        dataLabels: { enabled: false },
-        grid: { borderColor: "#e5e7eb" },
+        colors: accentColors,
+        grid: { borderColor: gridColor },
+        legend: { labels: { colors: textColor } },
       });
 
-      // --- ByParts Chart ---
+      // --- By Parts ---
       const partLabels = ["0–6h", "6–12h", "12–18h", "18–24h"];
       const partCountsHer = [0, 0, 0, 0];
       const partCountsHim = [0, 0, 0, 0];
-
       allTimes.forEach((entry) => {
         const hour = new Date(entry.time).getHours();
         const bucket = Math.floor(hour / 6);
@@ -129,144 +118,131 @@ export default function MissesGraph() {
         { name: "Him", data: partCountsHim },
       ]);
       setPartsOptions({
-        chart: { id: "parts", type: "bar", toolbar: { show: true } },
-        xaxis: { categories: partLabels, title: { text: "Day Parts" } },
-        yaxis: { title: { text: "Misses in Part" } },
-        colors: ["#EC4899", "#3B82F6"],
-        plotOptions: { bar: { horizontal: false, columnWidth: "40%", borderRadius: 6 } },
-        dataLabels: { enabled: true },
-        grid: { borderColor: "#e5e7eb" },
+        chart: { type: "bar" },
+        xaxis: { categories: partLabels, labels: { style: { colors: textColor } } },
+        yaxis: { labels: { style: { colors: textColor } } },
+        colors: accentColors,
+        plotOptions: { bar: { columnWidth: "40%", borderRadius: 6 } },
+        grid: { borderColor: gridColor },
+        legend: { labels: { colors: textColor } },
       });
 
-      // --- UwU Area Chart ---
+      // --- UwU Area ---
       setUwuSeries([
         { name: "Her", data: partCountsHer },
         { name: "Him", data: partCountsHim },
       ]);
       setUwuOptions({
-        chart: { id: "uwu", type: "area", toolbar: { show: true } },
-        xaxis: { categories: partLabels, title: { text: "Day Parts" } },
-        yaxis: { title: { text: "Misses in Part" } },
-        colors: ["#EC4899", "#3B82F6"],
+        chart: { type: "area" },
+        xaxis: { categories: partLabels, labels: { style: { colors: textColor } } },
+        yaxis: { labels: { style: { colors: textColor } } },
+        colors: accentColors,
         stroke: { curve: "smooth", width: 2 },
-        dataLabels: { enabled: false },
         fill: { type: "gradient", gradient: { opacityFrom: 0.5, opacityTo: 0.1 } },
-        grid: { borderColor: "#e5e7eb" },
+        grid: { borderColor: gridColor },
+        legend: { labels: { colors: textColor } },
       });
 
-      // --- Radar Chart ---
+      // --- Radar ---
       setRadarSeries([
         { name: "Her", data: partCountsHer },
         { name: "Him", data: partCountsHim },
       ]);
       setRadarOptions({
-        chart: { type: "radar", toolbar: { show: true } },
-        xaxis: { categories: partLabels },
-        colors: ["#EC4899", "#3B82F6"],
+        chart: { type: "radar" },
+        xaxis: { categories: partLabels, labels: { style: { colors: textColor } } },
+        colors: accentColors,
         stroke: { width: 2 },
         fill: { opacity: 0.3 },
+        legend: { labels: { colors: textColor } },
       });
 
-      // --- Gauge Chart ---
+      // --- Gauge ---
       const totalHer = data143.length;
       const totalHim = data1432.length;
       const total = totalHer + totalHim || 1;
-
-      const herPct = Math.round((totalHer / total) * 100);
-      const himPct = Math.round((totalHim / total) * 100);
-
-      setGaugeSeries([herPct, himPct]);
+      setGaugeSeries([Math.round((totalHer / total) * 100), Math.round((totalHim / total) * 100)]);
       setGaugeOptions({
         chart: { type: "radialBar" },
-        plotOptions: {
-          radialBar: {
-            dataLabels: {
-              name: { fontSize: "16px" },
-              value: { fontSize: "14px", formatter: (val) => `${val}%` },
-            },
-          },
-        },
+        plotOptions: { radialBar: { dataLabels: { value: { formatter: (val) => `${val}%` } } } },
         labels: ["Her", "Him"],
-        colors: ["#EC4899", "#3B82F6"],
+        colors: accentColors,
+        legend: { labels: { colors: textColor } },
       });
 
-      // --- Heatmap Chart ---
+      // --- Heatmap ---
       const hours = Array.from({ length: 24 }, (_, i) => i);
-      const herHeat = hours.map((h) => ({
-        x: `${h}:00`,
-        y: data143.filter((d) => new Date(d.time).getHours() === h).length,
-      }));
-      const himHeat = hours.map((h) => ({
-        x: `${h}:00`,
-        y: data1432.filter((d) => new Date(d.time).getHours() === h).length,
-      }));
-
       setHeatmapSeries([
-        { name: "Her", data: herHeat },
-        { name: "Him", data: himHeat },
+        {
+          name: "Her",
+          data: hours.map((h) => ({
+            x: `${h}:00`,
+            y: data143.filter((d) => new Date(d.time).getHours() === h).length,
+          })),
+        },
+        {
+          name: "Him",
+          data: hours.map((h) => ({
+            x: `${h}:00`,
+            y: data1432.filter((d) => new Date(d.time).getHours() === h).length,
+          })),
+        },
       ]);
       setHeatmapOptions({
-        chart: { type: "heatmap", toolbar: { show: true } },
-        plotOptions: { heatmap: { shadeIntensity: 0.5, radius: 4, useFillColorAsStroke: true } },
-        dataLabels: { enabled: false },
-        colors: ["#EC4899", "#3B82F6"],
-        xaxis: { title: { text: "Hour of Day" } },
-        yaxis: { title: { text: "Misses Count" } },
+        chart: { type: "heatmap" },
+        colors: accentColors,
+        xaxis: { labels: { style: { colors: textColor } } },
+        yaxis: { labels: { style: { colors: textColor } } },
+        grid: { borderColor: gridColor },
+        legend: { labels: { colors: textColor } },
       });
 
-      // --- Overall Chart (date-wise daily totals only) ---
+      // --- Overall ---
       const data143All = await fetchAllMisses("143");
       const data1432All = await fetchAllMisses("1432");
-
       const dateMapHer = {};
-      data143All.forEach(d => {
+      data143All.forEach((d) => {
         const date = new Date(d.time).toLocaleDateString();
         dateMapHer[date] = (dateMapHer[date] || 0) + 1;
       });
-
       const dateMapHim = {};
-      data1432All.forEach(d => {
+      data1432All.forEach((d) => {
         const date = new Date(d.time).toLocaleDateString();
         dateMapHim[date] = (dateMapHim[date] || 0) + 1;
       });
-
-      const allDates = Array.from(
-        new Set([...Object.keys(dateMapHer), ...Object.keys(dateMapHim)])
-      ).sort((a, b) => new Date(a) - new Date(b));
-
-      const seriesHerTotal = [];
-      const seriesHimTotal = [];
-
-      allDates.forEach(date => {
-        seriesHerTotal.push(dateMapHer[date] || 0); // only that day's total
-        seriesHimTotal.push(dateMapHim[date] || 0); // only that day's total
-      });
-
+      const allDates = Array.from(new Set([...Object.keys(dateMapHer), ...Object.keys(dateMapHim)])).sort(
+        (a, b) => new Date(a) - new Date(b)
+      );
       setOverallSeries([
-        { name: "Her", data: seriesHerTotal },
-        { name: "Him", data: seriesHimTotal },
+        { name: "Her", data: allDates.map((d) => dateMapHer[d] || 0) },
+        { name: "Him", data: allDates.map((d) => dateMapHim[d] || 0) },
       ]);
-
       setOverallOptions({
-        chart: { id: "overall", type: "line", zoom: { enabled: false }, toolbar: { show: true } },
-        xaxis: { categories: allDates, title: { text: "Date" }, labels: { rotate: -45 } },
-        yaxis: { title: { text: "Daily Misses" } },
+        chart: { type: "line" },
+        xaxis: { categories: allDates, labels: { style: { colors: textColor } } },
+        yaxis: { labels: { style: { colors: textColor } } },
         stroke: { curve: "smooth", width: 3 },
-        colors: ["#EC4899", "#3B82F6"],
-        dataLabels: { enabled: false },
-        grid: { borderColor: "#e5e7eb" },
+        colors: accentColors,
+        grid: { borderColor: gridColor },
+        legend: { labels: { colors: textColor } },
       });
     };
 
     loadData();
-  }, []);
+  }, [isDarkMode]);
 
   return (
-    <div className="w-full max-w-lg mx-auto mt-8 p-4 bg-white rounded-xl shadow-lg">
+    <div
+      className={`w-full max-w-lg mx-auto mt-8 p-4 rounded-xl shadow-lg transition-colors duration-300 ${
+        isDarkMode ? "bg-black text-white" : "bg-white text-black"
+      }`}
+    >
       {/* Header */}
       <h2 className="text-center font-semibold text-lg mb-2">
-        <span className="text-blue-500">{import.meta.env.VITE_CHART_TITLE}</span>
-        <span className="text-pink-500"> Syndrome</span>
+        <span className={isDarkMode ? "text-white" : "text-blue-500"}>
+          {import.meta.env.VITE_CHART_TITLE}
+        </span>{" "}
+        <span className={isDarkMode ? "text-red-500" : "text-pink-500"}>Syndrome</span>
       </h2>
 
       {/* Tabs */}
@@ -275,10 +251,14 @@ export default function MissesGraph() {
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1 rounded-lg font-medium ${
+            className={`px-3 py-1 rounded-lg font-medium transition-colors ${
               activeTab === tab
-                ? "bg-blue-500 text-white"
-                : "bg-gray-200 text-gray-700"
+                ? isDarkMode
+                  ? "bg-white text-red-600"
+                  : "bg-blue-500 text-white"
+                : isDarkMode
+                ? "bg-black border border-white text-white"
+                : "bg-white border border-black text-black"
             }`}
           >
             {tab === "overall" ? "Overall" : tab.charAt(0).toUpperCase() + tab.slice(1)}

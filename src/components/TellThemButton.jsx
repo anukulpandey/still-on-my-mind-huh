@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import toast, { Toaster } from "react-hot-toast";
+import { useDarkMode } from "../hooks/useDarkMode";
 
 export default function TellThemButton() {
   const [loading, setLoading] = useState(false);
   const [lastMiss, setLastMiss] = useState(null);
+  const { isDarkMode } = useDarkMode();
 
   const storedCode = localStorage.getItem("code");
 
@@ -68,26 +70,36 @@ export default function TellThemButton() {
   };
 
   return (
-    <div className="flex flex-col gap-3 items-center justify-center px-4 font-sans">
-      {/* Toast at bottom-right */}
+    <div
+      className={`flex flex-col gap-3 items-center justify-center px-4 py-6 font-sans rounded-2xl shadow-lg transition-colors duration-300 ${
+        isDarkMode ? "bg-black text-white" : "bg-white text-black"
+      }`}
+    >
+      {/* Toast */}
       <Toaster position="bottom-right" reverseOrder={false} />
 
-    
-{/* 
-      <div className="text-xl font-semibold mb-1 text-center text-blue-800">
-      Missing {storedCode=="143"?"him?":"her?"} 🥺
-      </div> */}
-
       <button
-        className="w-full max-w-xs p-3 rounded-lg bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50"
+        className={`w-full max-w-xs p-3 rounded-lg font-semibold transition-colors disabled:opacity-50 ${
+          isDarkMode
+            ? "bg-white text-red-600 hover:bg-red-100"
+            : "bg-blue-600 text-white hover:bg-blue-700"
+        }`}
         onClick={handleTellThem}
         disabled={loading}
       >
-        
-        {loading ? "Sending…" : `Tell ${storedCode=="143"?"him, He":"her, She"} is on your mind! 😭`}
+        {loading
+          ? "Sending…"
+          : `Tell ${storedCode === "143" ? "him, He" : "her, She"} is on your mind! 😭`}
       </button>
+
       {lastMiss && (
-        <div className="text-center font-semibold text-red-700">{lastMiss}</div>
+        <div
+          className={`text-center font-semibold mt-2 ${
+            isDarkMode ? "text-white" : "text-red-700"
+          }`}
+        >
+          {lastMiss}
+        </div>
       )}
     </div>
   );
